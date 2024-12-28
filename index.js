@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [process.env.PUBLIC_URL,'http://localhost:3000'],
     credentials: true,
   })
 )
@@ -35,24 +35,25 @@ async function run() {
   try {
 
     // database and collection
-     const yandex = client.db('yandex');
-     const foods = yandex.collection('foods');
+    const yandex = client.db('yandex');
+    const foods = yandex.collection('foods');
 
 
     //  apis
     app.get('/foods', async (req, res) => {
-      const result = await foods.find().toArray();
+      let query = {}
+      if (req.query.search) {
+        query = { title: { $regex: req.query.search, $options: 'i' } }
+      }
+      const result = await foods.find(query).toArray();
       res.send(result);
     });
 
 
 
-
-
-
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {}
+  } finally { }
 }
 run().catch(console.dir);
 
